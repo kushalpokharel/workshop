@@ -1,6 +1,7 @@
-import { ExecutionMode, TransactionResponse, tx } from '@doko-js/core';
+import { ExecutionMode, parseJSONLikeString, TransactionResponse, tx } from '@doko-js/core';
 import { Handler_v1Contract } from '../artifacts/js/handler_v1';
 import { Token_v1Contract } from '../artifacts/js/token_v1';
+import { decrypttoken, gettoken } from '../artifacts/js/leo2js/token_v1';
 
 const TIMEOUT = 200_000;
 const amount = BigInt(2);
@@ -11,9 +12,19 @@ const mode: ExecutionMode = ExecutionMode.SnarkExecute;
 const handler_contract = new Handler_v1Contract({ mode });
 const token_contract = new Token_v1Contract({mode});
 
+const parseTokenData = (record, account) => {
+    // @ts-ignore
+    if (mode == ExecutionMode.LeoRun) {
+        return gettoken(parseJSONLikeString(record));
+    }
+
+    return decrypttoken(record, account);
+}
+
 beforeAll(async () => {
     try {
         const isContractDeployed = await handler_contract.isDeployed();
+        // @ts-ignore
         if (mode == ExecutionMode.SnarkExecute && !isContractDeployed) {
             const deploy_tx = await token_contract.deploy();
             await deploy_tx.wait()
@@ -34,14 +45,14 @@ describe("Handler handler_contract", () => {
         await tx.wait()
     }, TIMEOUT);
 
-    test("Initialize can't be called by address other than handler", ()=>{
+    test("[Rejected] Initialize: can't be called by address other than handler", ()=>{
         // Add test here
     });
 
     test("Mint Token to your address", async () => {
 
         // query the token amount before you buy okens
-        const aleoUser1 = handler_contract.getAccounts()[1];
+        const aleoUser1 = handler_contract.getAccounts()[0];
         const previous_balance = await token_contract.account(aleoUser1, BigInt(0));
 
         const amount = BigInt(10);
@@ -61,7 +72,19 @@ describe("Handler handler_contract", () => {
     }, TIMEOUT);
 
     test("Mint Private", async ()=>{
-        //Add test here
-        
-    })
+        const amount_to_mint = BigInt(1000);
+        const aleoUser2 = handler_contract.getAccounts()[2];
+        const txn = await token_contract.mint_private(aleoUser2, BigInt(1000));
+        const [myRecord] = await txn.wait();
+        const decryptedRecord = parseTokenData(
+            myRecord,
+            process.env.ALEO_DEVNET_PRIVATE_KEY3
+        );
+        expect(decryptedRecord.amount).toBe(amount_to_mint);
+    }, TIMEOUT);
+
+    test("Transfer Private", async ()=>{
+        // Add test here
+
+    });
 })

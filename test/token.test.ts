@@ -1,6 +1,6 @@
 import { ExecutionMode, parseJSONLikeString } from '@doko-js/core';
-import { TokenContract } from '../artifacts/js/token';
-import { decrypttoken, gettoken } from '../artifacts/js/leo2js/token';
+import { Token_v1Contract } from '../artifacts/js/token_v1';
+import { decrypttoken, gettoken } from '../artifacts/js/leo2js/token_v1';
 import { PrivateKey } from '@provablehq/sdk';
 
 const TIMEOUT = 200_000;
@@ -9,13 +9,14 @@ const amount = BigInt(2);
 // Available modes are evaluate | execute (Check README.md for further description)
 const mode: ExecutionMode = ExecutionMode.LeoRun;
 // Contract class initialization
-const contract = new TokenContract({ mode });
+const contract = new Token_v1Contract({ mode });
 
 // This maps the accounts defined inside networks in aleo-config.js and return array of address of respective private keys
 const [admin] = contract.getAccounts();
 const recipient = process.env.ALEO_DEVNET_PRIVATE_KEY3;
 
 const parseTokenData = (record, account) => {
+  //@ts-ignore
   if (mode == ExecutionMode.LeoRun) {
     return gettoken(parseJSONLikeString(record));
   }
@@ -26,6 +27,7 @@ const parseTokenData = (record, account) => {
 beforeAll(async () => {
   try {
     const isContractDeployed = await contract.isDeployed();
+    //@ts-ignore
     if (mode !== ExecutionMode.LeoRun && isContractDeployed) {
       const tx = await contract.deploy();
       await tx.wait();
@@ -36,14 +38,14 @@ beforeAll(async () => {
 })
 
 describe('deploy test', () => {
-  test('mint public', async () => {
-    const actualAmount = BigInt(10);
-    const tx = await contract.mint_public(admin, actualAmount);
-    await tx.wait();
+  // test('mint public', async () => {
+  //   const actualAmount = BigInt(10);
+  //   const tx = await contract.mint_public(admin, actualAmount);
+  //   await tx.wait();
 
-    const expected = await contract.account(admin, actualAmount);
-    expect(expected).toBe(actualAmount);
-  }, TIMEOUT);
+  //   const expected = await contract.account(admin, actualAmount);
+  //   expect(expected).toBe(actualAmount);
+  // }, TIMEOUT);
 
   test('mint private', async () => {
     const actualAmount = BigInt(100000);
@@ -56,7 +58,7 @@ describe('deploy test', () => {
     // @NOTE Only decrypt in SnarkExecute use JSON.parse in LeoRun
     const decryptedRecord = parseTokenData(
       record1,
-      process.env.ALEO_PRIVATE_KEY_TESTNET3
+      process.env.ALEO_DEVNET_PRIVATE_KEY1
     );
 
     expect(decryptedRecord.amount).toBe(actualAmount);

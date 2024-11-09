@@ -33,14 +33,15 @@ program token_v1.aleo {
     async transition mint_public(public receiver: address, public amount: u64) -> Future{
         let f:Future = credits.aleo/transfer_public_as_signer(handler, amount);
         // Mint the tokens publicly by invoking the computation on-chain.
-        return (finalize_mint_public(receiver, amount, f));
+        return (finalize_mint_public(receiver, amount, self.caller, f));
     }
 
-    async function finalize_mint_public(public receiver: address, public amount: u64, f: Future) {
+    async function finalize_mint_public(public receiver: address, public amount: u64, caller:address, f: Future) {
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.
         // If `account[receiver] + amount` overflows, `mint_public` is reverted.
         f.await();
+        assert(caller == handler);
         let max_supply:u64 = limit.get_or_use(MAX_SUPPLY, 0u64);
         let mint_limit:u64 = limit.get_or_use(MINT_LIMIT, 0u64);
         assert(amount <= mint_limit);

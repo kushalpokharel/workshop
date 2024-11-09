@@ -6,10 +6,11 @@ export default {
   mode: 'execute',
   networks: {
     testnet: {
-      endpoint: 'http://localhost:3030',
+      endpoint: 'https://api.explorer.provable.com/v1',
       accounts: [
+        process.env.ALEO_DEVNET_PRIVATE_KEY1,
         process.env.ALEO_DEVNET_PRIVATE_KEY2,
-        process.env.ALEO_DEVNET_PRIVATE_KEY3
+        process.env.ALEO_DEVNET_PRIVATE_KEY3,
       ],
       priorityFee: 0.01
     },
