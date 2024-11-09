@@ -2,6 +2,7 @@ import { ExecutionMode, parseJSONLikeString, TransactionResponse, tx } from '@do
 import { Handler_v1Contract } from '../artifacts/js/handler_v1';
 import { Token_v1Contract } from '../artifacts/js/token_v1';
 import { decrypttoken, gettoken } from '../artifacts/js/leo2js/token_v1';
+import { PrivateKey } from '@provablehq/sdk';
 
 const TIMEOUT = 200_000;
 const amount = BigInt(2);
@@ -42,15 +43,18 @@ describe("Handler handler_contract", () => {
         const MAX_SUPPLY = BigInt(10000);
         const MINT_LIMIT = BigInt(100);
         const tx = await handler_contract.init(MAX_SUPPLY, MINT_LIMIT);
-        await tx.wait()
+        await tx.wait();
     }, TIMEOUT);
 
-    test("[Rejected] Initialize: can't be called by address other than handler", ()=>{
+    test.failing("[Rejected] Token's Initialize can't be called by address other than handler", async()=>{
         // Add test here
+        const MAX_SUPPLY = BigInt(10000);
+        const MINT_LIMIT = BigInt(100);
+        const tx = await token_contract.initialize(MAX_SUPPLY, MINT_LIMIT);
+        await tx.wait();
     });
 
     test("Mint Token to your address", async () => {
-
         // query the token amount before you buy okens
         const aleoUser1 = handler_contract.getAccounts()[0];
         const previous_balance = await token_contract.account(aleoUser1, BigInt(0));
@@ -83,8 +87,24 @@ describe("Handler handler_contract", () => {
         expect(decryptedRecord.amount).toBe(amount_to_mint);
     }, TIMEOUT);
 
-    test("Transfer Private", async ()=>{
+    test("Transfer Public to Private", async ()=>{
         // Add test here
+        const aleoUser1 = handler_contract.getAccounts()[0];
+        const aleoUser2 = handler_contract.getAccounts()[1];
+        const previous_balance = await token_contract.account(aleoUser1, BigInt(0));
 
-    });
+        const amount = BigInt(10);
+        const txn = await handler_contract.buy_token(amount);
+        const result = await txn.wait();
+
+        // transfer this balance to your other address
+        const tx = await token_contract.transfer_public_to_private(aleoUser2, BigInt(10));
+        const [sentRecord] = await tx.wait();
+        const decryptedRecord = parseTokenData(
+            sentRecord,
+            process.env.ALEO_DEVNET_PRIVATE_KEY2
+        );
+        expect(decryptedRecord.amount).toBe(amount);
+
+    }, TIMEOUT);
 })
