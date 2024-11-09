@@ -4,13 +4,12 @@ dotenv.config();
 export default {
   accounts: [process.env.ALEO_PRIVATE_KEY],
   mode: 'execute',
-  mainnet: {},
   networks: {
     testnet: {
       endpoint: 'http://localhost:3030',
       accounts: [
-        process.env.ALEO_PRIVATE_KEY_TESTNET3,
-        process.env.ALEO_DEVNET_PRIVATE_KEY2
+        process.env.ALEO_DEVNET_PRIVATE_KEY2,
+        process.env.ALEO_DEVNET_PRIVATE_KEY3
       ],
       priorityFee: 0.01
     },
@@ -20,5 +19,5 @@ export default {
       priorityFee: 0.001
     }
   },
-  defaultNetwork: 'testnet'
+  defaultNetwork: 'testnet',
 };

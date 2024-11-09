@@ -1,6 +1,6 @@
 import credits.aleo;
 // The `program` scope defines the data types, functions, and state associated with the `token` program.
-program token.aleo {
+program token_v1.aleo {
     // On-chain storage of an `account` map, with `address` as the key,
     // and `u64` as the value.
     mapping account: address => u64;
@@ -9,7 +9,7 @@ program token.aleo {
     const MAX_SUPPLY:bool = true;
     const MINT_LIMIT:bool = false; 
     const CURRENT_SUPPLY:bool = false;
-    const handler:address = aleo16avnhgky2h2xvxnhh8w6apdrxt9x53j8xwqfvvvcm5lfdzk5wqxsllx2ur;
+    const handler:address = handler_v1.aleo;
 
     record token {
         // The token owner.
